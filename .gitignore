@@ -1,0 +1,10 @@
+# Pycache
+**/__pycache__/
+# Python virtual environment
+.env
+# Logs
+log/nginx/*
+# API Upload folder
+app/uploads/*
+
+MPEG2TransportStreamIndexer
