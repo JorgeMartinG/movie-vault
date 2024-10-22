@@ -8,3 +8,5 @@ log/nginx/*
 app/uploads/*
 
 MPEG2TransportStreamIndexer
+
+default.conf
