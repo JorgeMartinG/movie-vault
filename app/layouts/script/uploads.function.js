@@ -13,9 +13,7 @@ function formatFileSize(bytes) {
 async function deleteUploadedFile(filename) {
    try {
       const response = await fetch(
-         'http://192.168.1.156:8000/api/files/' + filename,
-         // 'http://192.168.0.249:8000/api/files/' + filename,
-         { method: 'DELETE'}
+         'http://10.48.103.186:8000/api/files/' + filename, { method: 'DELETE'}
       );
       if (response.ok) {
          alert('File deleted successfully');
@@ -27,30 +25,9 @@ async function deleteUploadedFile(filename) {
    }
 }
 
-// async function renameUploadedFile(oldName, newName) {
-//    try {
-//       const response = await fetch('http://192.168.1.156:8000/api/files/' + oldName, {
-//          method: 'PATCH',
-//          headers: {
-//             'Content-Type': 'application/json'
-//          },
-//          body: JSON.stringify({ new_name: newName })
-//       });
-//       if (response.ok) {
-//          alert('File renamed successfully');
-//          fetchUploadedFiles();
-//       } else {
-//          alert('Error renaming file: ' + response.statusText);
-//       }
-//    } catch (error) {
-//       console.error('Error renaming file:', error);
-//    }
-// }
-
 async function fetchUploadedFiles() {
    try {
-      const response = await fetch('http://192.168.1.156:8000/api/files/');
-      // const response = await fetch('http://192.168.0.249:8000/api/files/');
+      const response = await fetch('http://10.48.103.186:8000/api/files/');
       const data = await response.json();
       const fileList = document.getElementById('fileList');
       fileList.innerHTML = '';
@@ -58,30 +35,54 @@ async function fetchUploadedFiles() {
       if (data.files && data.files.length > 0) {
          data.files.forEach(file => {
             const listItem = document.createElement('li');
+            
+            // Basic information: Name, size and last modification.
             listItem.innerHTML = file.filename + ' ' + '(' + formatFileSize(file.size) + ')' + ' - Last modified: ' + new Date(file.last_modified).toLocaleString();
 
-            // Botón de eliminar archivo
+            // Get file details if exists.
+            if (file.video_streams || file.audio_streams || file.subtitle_streams) {
+               const detailsList = document.createElement('ul');
+               
+               // Video stream information.
+               if (file.video_streams && file.video_streams.length > 0) {
+                  file.video_streams.forEach((video, index) => {
+                     const videoItem = document.createElement('li');
+                     videoItem.innerHTML = `Video Stream ${index + 1}: ${video.codec}, Resolution: ${video.resolution}, FPS: ${video.fps}`;
+                     detailsList.appendChild(videoItem);
+                  });
+               }
+
+               // Audio stream information.
+               if (file.audio_streams && file.audio_streams.length > 0) {
+                  file.audio_streams.forEach((audio, index) => {
+                     const audioItem = document.createElement('li');
+                     audioItem.innerHTML = `Audio Stream ${index + 1}: ${audio.codec}, Language: ${audio.language}`;
+                     detailsList.appendChild(audioItem);
+                  });
+               }
+
+               // Subtitle stream information.
+               if (file.subtitle_streams && file.subtitle_streams.length > 0) {
+                  file.subtitle_streams.forEach((subtitle, index) => {
+                     const subtitleItem = document.createElement('li');
+                     subtitleItem.innerHTML = `Subtitle Stream ${index + 1}: ${subtitle.codec}, Language: ${subtitle.language}`;
+                     detailsList.appendChild(subtitleItem);
+                  });
+               }
+
+               listItem.appendChild(detailsList);
+            }
+
+            // Delete button.
             const deleteButton = document.createElement('button');
             deleteButton.innerHTML = 'Delete';
-            deleteButton.classList.add('delete-button'); // Clase para estilos
+            deleteButton.classList.add('delete-button'); // delete-button class
             deleteButton.onclick = async function() {
                await deleteUploadedFile(file.filename);
-               fetchUploadedFiles(); // Refresca la lista después de borrar
+               fetchUploadedFiles(); // Refresh screen before delete
             };
 
-            // Botón de renombrar archivo
-            // const renameButton = document.createElement('button');
-            // renameButton.innerHTML = 'Rename';
-            // renameButton.classList.add('rename-button'); // Clase para estilos
-            // renameButton.onclick = function() {
-            //    const newName = prompt('Enter new filename:', file.filename);
-            //    if (newName && newName !== file.filename) {
-            //       renameUploadedFile(file.filename, newName);
-            //    }
-            // };
-
             listItem.appendChild(deleteButton);
-            // listItem.appendChild(renameButton);
             fileList.appendChild(listItem);
          });
       } else {
@@ -94,5 +95,5 @@ async function fetchUploadedFiles() {
    }
 }
 
-// Llamar a la función para obtener archivos cuando cargue la página
+// Call function on load
 window.onload = fetchUploadedFiles;

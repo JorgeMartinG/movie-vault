@@ -3,14 +3,15 @@ import os
 from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pathlib import Path
 from typing import List
+from ffmpeg import get_video_info
 
 
 app = FastAPI()
 
-origins = ["http://192.168.1.156", "http://localhost"]
-# origins = ["http://192.168.0.249", "http://localhost"]
+origins = ["http://10.48.103.186", "http://localhost"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,7 +26,8 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @app.post("/api/uploads/")
-async def create_upload_file(file_uploads: List[UploadFile] = File(...)):
+async def create_upload_file(file_uploads: List[UploadFile] = File(...)) -> list:
+    
     uploaded_files = []
 
     for file in file_uploads:
@@ -47,11 +49,11 @@ async def create_upload_file(file_uploads: List[UploadFile] = File(...)):
         finally:
             await file.close()
 
-    return {"filenames": [file.filename for file in file_uploads]}
+    return [file.filename for file in file_uploads]
 
+@app.get("/api/files/")
+async def list_upload_file() -> dict:
 
-@app.get("/api/files")
-async def list_upload_file():
     try:
         files = []
         for filename in os.listdir(UPLOAD_DIR):
@@ -66,8 +68,12 @@ async def list_upload_file():
                         file_path.stat().st_mtime
                     ).isoformat(),
                 }
+            
+            if filename.lower().endswith(('.mp4', '.mkv', '.ts')):
+                video_info = get_video_info(file_path)
+                file_info.update(video_info)
 
-                files.append(file_info)
+            files.append(file_info)
 
         if not files:
             return {"message": "No files found"}
@@ -79,7 +85,8 @@ async def list_upload_file():
 
 
 @app.delete("/api/files/{filename}")
-async def delete_file(filename: str):
+async def delete_file(filename: str) -> None:
+
     file_path = UPLOAD_DIR / filename
 
     if not file_path.exists() or not file_path.is_file():
@@ -93,25 +100,6 @@ async def delete_file(filename: str):
         raise HTTPException(
             status_code=500, detail=f"Error deleting file {filename}: {e}"
         )
-
-
-# @app.put("/api/files/{filename}")
-# async def rename_file(filename: str, new_filename: str):
-#     file_path = UPLOAD_DIR / filename
-#     new_file_path = UPLOAD_DIR / new_filename
-
-#     if not file_path.exists() or not file_path.is_file():
-#         raise HTTPException(status_code=404, detail=f"File {filename} not found")
-
-#     if new_file_path.exists():
-#         raise HTTPException(status_code=409, detail=f"File {new_filename} already exists")
-
-#     try:
-#         os.rename(file_path, new_file_path)
-#         return {"message": f"File {filename} renamed to {new_filename} successfully"}
-
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error renaming file {filename}: {e}")
 
 if __name__ == "__main__":
 
