@@ -6,12 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pathlib import Path
 from typing import List
-from ffmpeg import get_video_info
+from get_streams import get_video_info
 
 
 app = FastAPI()
 
 origins = ["http://10.48.103.186", "http://localhost"]
+# origins = ["http://192.168.1.156", "http://localhost"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -61,13 +62,7 @@ async def list_upload_file() -> dict:
 
             if file_path.is_file():
 
-                file_info = {
-                    "filename": filename,
-                    "size": file_path.stat().st_size,
-                    "last_modified": datetime.fromtimestamp(
-                        file_path.stat().st_mtime
-                    ).isoformat(),
-                }
+                file_info = {"filename": filename, "size": file_path.stat().st_size}
             
             if filename.lower().endswith(('.mp4', '.mkv', '.ts')):
                 video_info = get_video_info(file_path)

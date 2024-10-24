@@ -10,15 +10,28 @@ function formatFileSize(bytes) {
    }
 }
 
+function showMessage(message, type = 'success') {
+   const messageBox = document.createElement('div');
+   messageBox.className = `message-box ${type}`;
+   messageBox.textContent = message;
+   
+   document.body.appendChild(messageBox);
+   
+   setTimeout(() => {
+      messageBox.remove();
+   }, 3000); // Desaparece en 3 segundos
+}
+
 async function deleteUploadedFile(filename) {
    try {
       const response = await fetch(
          'http://10.48.103.186:8000/api/files/' + filename, { method: 'DELETE'}
+         // 'http://192.168.1.156:8000/api/files/' + filename, { method: 'DELETE'}
       );
       if (response.ok) {
-         alert('File deleted successfully');
+         showMessage('File deleted succesfully', 'success');
       } else {
-         alert('Error deleting file: ' + response.statusText);
+         showMessage('Error deleting file: ' + response.statusText, 'error');
       }
    } catch (error) {
       console.error('Error deleting file:', error);
@@ -28,6 +41,7 @@ async function deleteUploadedFile(filename) {
 async function fetchUploadedFiles() {
    try {
       const response = await fetch('http://10.48.103.186:8000/api/files/');
+      // const response = await fetch('http://192.168.1.156:8000/api/files/')
       const data = await response.json();
       const fileList = document.getElementById('fileList');
       fileList.innerHTML = '';
@@ -37,7 +51,7 @@ async function fetchUploadedFiles() {
             const listItem = document.createElement('li');
             
             // Basic information: Name, size and last modification.
-            listItem.innerHTML = file.filename + ' ' + '(' + formatFileSize(file.size) + ')' + ' - Last modified: ' + new Date(file.last_modified).toLocaleString();
+            listItem.innerHTML = file.filename + ' ' + '(' + formatFileSize(file.size) + ')';
 
             // Get file details if exists.
             if (file.video_streams || file.audio_streams || file.subtitle_streams) {
@@ -47,7 +61,7 @@ async function fetchUploadedFiles() {
                if (file.video_streams && file.video_streams.length > 0) {
                   file.video_streams.forEach((video, index) => {
                      const videoItem = document.createElement('li');
-                     videoItem.innerHTML = `Video Stream ${index + 1}: ${video.codec}, Resolution: ${video.resolution}, FPS: ${video.fps}`;
+                     videoItem.innerHTML = `Video Stream ${index + 1}: ${video.codec.toUpperCase()}, Resolution: ${video.resolution}, FPS: ${video.fps}`;
                      detailsList.appendChild(videoItem);
                   });
                }
@@ -56,7 +70,7 @@ async function fetchUploadedFiles() {
                if (file.audio_streams && file.audio_streams.length > 0) {
                   file.audio_streams.forEach((audio, index) => {
                      const audioItem = document.createElement('li');
-                     audioItem.innerHTML = `Audio Stream ${index + 1}: ${audio.codec}, Language: ${audio.language}`;
+                     audioItem.innerHTML = `Audio Stream ${index + 1}: ${audio.codec.toUpperCase()}, Language: ${audio.language.toUpperCase()}`;
                      detailsList.appendChild(audioItem);
                   });
                }
@@ -78,8 +92,10 @@ async function fetchUploadedFiles() {
             deleteButton.innerHTML = 'Delete';
             deleteButton.classList.add('delete-button'); // delete-button class
             deleteButton.onclick = async function() {
-               await deleteUploadedFile(file.filename);
-               fetchUploadedFiles(); // Refresh screen before delete
+               if (confirm(`Are you sure you want to delete ${file.filename}?`)) {
+                  await deleteUploadedFile(file.filename);
+                  fetchUploadedFiles(); // Refresca la lista tras borrar
+               }
             };
 
             listItem.appendChild(deleteButton);

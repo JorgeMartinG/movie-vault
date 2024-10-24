@@ -33,8 +33,6 @@ def get_video_info(file_path: Path) -> dict:
                     "language": stream.get('tags', {}).get('language', 'Unknown')
                 })
 
-        print(video_info)
-
         return video_info
 
     except Exception as e:
