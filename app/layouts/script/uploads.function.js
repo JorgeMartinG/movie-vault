@@ -25,7 +25,7 @@ function showMessage(message, type = 'success') {
 async function deleteUploadedFile(filename) {
    try {
       const response = await fetch(
-         'http://10.48.103.186:8000/api/files/' + filename, { method: 'DELETE'}
+         'http://localhost:8000/api/files/' + filename, { method: 'DELETE'}
          // 'http://192.168.1.156:8000/api/files/' + filename, { method: 'DELETE'}
       );
       if (response.ok) {
@@ -40,7 +40,7 @@ async function deleteUploadedFile(filename) {
 
 async function fetchUploadedFiles() {
    try {
-      const response = await fetch('http://10.48.103.186:8000/api/files/');
+      const response = await fetch('http://localhost:8000/api/files/');
       // const response = await fetch('http://192.168.1.156:8000/api/files/')
       const data = await response.json();
       const fileList = document.getElementById('fileList');

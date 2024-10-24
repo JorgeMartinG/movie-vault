@@ -6,25 +6,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pathlib import Path
 from typing import List
-from get_streams import get_video_info
-
+from .get_streams import get_video_info
 
 app = FastAPI()
 
-origins = ["http://10.48.103.186", "http://localhost"]
-# origins = ["http://192.168.1.156", "http://localhost"]
+origins = ["http://localhost"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,  # Permit all origins
     allow_methods=["GET", "POST", "OPTIONS", "DELETE"],
     allow_headers=["*"],
     allow_credentials=True,
 )
 
-UPLOAD_DIR = Path("../uploads").resolve()
+UPLOAD_DIR = Path("./uploads").resolve()
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the API"}
 
 @app.post("/api/uploads/")
 async def create_upload_file(file_uploads: List[UploadFile] = File(...)) -> list:
@@ -96,16 +97,16 @@ async def delete_file(filename: str) -> None:
             status_code=500, detail=f"Error deleting file {filename}: {e}"
         )
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    import uvicorn
+#     import uvicorn
 
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        workers=4,
-        log_level="debug",
-        timeout_keep_alive=60,
-        reload=False,
-    )
+#     uvicorn.run(
+#         "main:app",
+#         host="0.0.0.0",
+#         port=8000,
+#         workers=4,
+#         log_level="debug",
+#         timeout_keep_alive=60,
+#         reload=False,
+#     )
